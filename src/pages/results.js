@@ -31,7 +31,7 @@ export function resultsPage() {
       </div>
       <div class="result-actions">
         <button id="copyButton" class="secondary-button" type="button">Copy summary</button>
-        <button id="backButton" class="primary-button" type="button">Start over ${icon('arrow')}</button>
+        <button id="backButton" class="primary-button" type="button">New round, same people ${icon('arrow')}</button>
       </div>
     </section>
     <section class="balance-summary">
@@ -40,7 +40,11 @@ export function resultsPage() {
     </section>
   `);
 
-  document.getElementById('backButton').addEventListener('click', () => navigateTo('/'));
+  document.getElementById('backButton').addEventListener('click', () => {
+    const nextRound = playersData.map((player) => ({ player: player.player, name: player.player, value: '' }));
+    localStorage.setItem('playersDraft', JSON.stringify(nextRound));
+    navigateTo('/');
+  });
   document.getElementById('copyButton').addEventListener('click', async (event) => {
     const summary = result.payments.map((payment) => `${payment.from} pays ${payment.to} $${payment.amount.toFixed(2)}`).join('\n');
     await navigator.clipboard.writeText(summary || 'Everyone is already settled.');

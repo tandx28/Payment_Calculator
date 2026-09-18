@@ -8,10 +8,10 @@ const pages = {
     title: 'Your numbers are yours.',
     intro: 'Settle is designed to calculate group payments without accounts, profiles, or storing your financial details on a server.',
     sections: [
-      ['What we process', 'Names and balances you enter are processed locally in your browser and saved in your device’s local storage so you can return to your calculation. Do not enter sensitive personal information.'],
+      ['What we process', 'Names, balances, active sessions, and groups you save are processed locally in your browser. They are not uploaded to Settle. Do not enter sensitive personal information.'],
       ['Analytics', 'We use Vercel Web Analytics to understand aggregate visits and page views. It is designed without cookies and does not show us individual visitor identities. You can disable analytics from the Cookie Policy.'],
       ['Hosting and service data', 'Vercel hosts this website and may process technical request data such as IP addresses, device information, and timestamps for security, delivery, and reliability. Their handling of that data is governed by Vercel’s own privacy terms.'],
-      ['Retention and control', 'Calculation data remains on your device until you clear your browser storage. Analytics data follows the retention settings of the site’s Vercel account.'],
+      ['Retention and control', 'Sessions and saved groups remain on this device until you delete a group or clear this site’s browser storage. Analytics data follows the retention settings of the site’s Vercel account.'],
       ['Contact', 'For privacy questions, open an issue in the project’s GitHub repository. Please do not include private financial information in a public issue.'],
     ],
   },
@@ -20,7 +20,7 @@ const pages = {
     title: 'No tracking cookies.',
     intro: 'Settle does not use advertising cookies or cross-site tracking. It uses browser storage only to make the calculator work and remember your preference.',
     sections: [
-      ['Local storage', 'We store your current calculation under playersDraft and playersData, and your analytics preference under settle-analytics. Local storage stays on your device and is not a cookie.'],
+      ['Local storage', 'We use local storage for your current session, saved groups, selected group, and analytics preference. This information stays on your device and is not a cookie.'],
       ['Vercel Web Analytics', 'Our audience measurement is cookieless. It provides aggregate information such as page views and visitor counts without creating advertising profiles.'],
       ['Your choices', 'You can disable analytics below. You can also remove calculator data at any time by clearing this site’s data in your browser settings.'],
     ],
