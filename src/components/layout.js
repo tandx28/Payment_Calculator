@@ -26,7 +26,7 @@ export function shell(content, { compact = false } = {}) {
       <main class="${compact ? 'legal-main' : ''}">${content}</main>
       <footer>
         <a class="brand brand--small" href="/" data-link><span class="brand-mark">S</span><span>Settle</span></a>
-        <p>Simple settlements. No account required.</p>
+        <p>Game nights settled. No account needed.</p>
         <div class="footer-links">
           <a href="/privacy" data-link>Privacy</a>
           <a href="/cookies" data-link>Cookies</a>

@@ -12,7 +12,7 @@ const GROUPS_KEY = 'settle-groups';
 const ACTIVE_GROUP_KEY = 'settle-active-group';
 
 export function inputPage() {
-  document.title = 'Settle — Group payment calculator';
+  document.title = 'Settle — Game-night payment calculator';
   const app = document.getElementById('app');
   const saved = readStorage(DRAFT_KEY, null);
   const players = Array.isArray(saved) && saved.length >= 2 ? saved : defaultPlayers;
@@ -20,13 +20,13 @@ export function inputPage() {
 
   app.innerHTML = shell(`
     <section class="hero">
-      <div class="eyebrow">${icon('sparkle')} Group payments, simplified</div>
-      <h1>Settle up.<br><span>Stay friends.</span></h1>
-      <p>Turn a messy list of wins and losses into the fewest clear payments — in seconds.</p>
+      <div class="eyebrow">${icon('sparkle')} Made for SG game nights</div>
+      <h1>Settle lah.<br><span>Stay friends.</span></h1>
+      <p>Mahjong, poker or late-night card games — turn everyone’s wins and losses into a clean list of SGD payments.</p>
       <div class="trust-row">
-        <span>${icon('shield')} Private by design</span>
+        <span>${icon('shield')} Stays on your device</span>
         <span>No sign-up</span>
-        <span>Free to use</span>
+        <span>SGD-ready</span>
       </div>
     </section>
 
@@ -34,8 +34,8 @@ export function inputPage() {
       <div class="card-heading">
         <div>
           <p class="step-label">Step 1 of 1</p>
-          <h2 id="calculator-title">Add everyone’s balance</h2>
-          <p>Choose + for money owed to someone, or − for money they owe.</p>
+          <h2 id="calculator-title">Who’s up, who’s down?</h2>
+          <p>Tap + if they won, or − if they lost. The table should add up to $0.</p>
         </div>
         <div class="balance-pill" id="balancePill">Balance <strong>$0.00</strong></div>
       </div>
@@ -43,11 +43,11 @@ export function inputPage() {
       <div class="group-panel">
         <div class="group-copy">
           <span class="group-icon">${icon('shield')}</span>
-          <div><strong>Your groups</strong><small>Saved only on this device</small></div>
+          <div><strong>Your regular tables</strong><small>Save your usual game-night crew</small></div>
         </div>
         <div class="group-controls">
           <select id="groupSelect" aria-label="Saved group"></select>
-          <button class="compact-button" id="saveGroupButton" type="button">Save group</button>
+          <button class="compact-button" id="saveGroupButton" type="button">Save this group</button>
           <button class="icon-button group-delete" id="deleteGroupButton" type="button" aria-label="Delete selected group" disabled>${icon('trash')}</button>
         </div>
         <p id="groupStatus" class="group-status" role="status"></p>
@@ -58,19 +58,19 @@ export function inputPage() {
         <div id="playerInputs" class="player-list"></div>
         <button class="add-button" id="addPlayer" type="button">${icon('plus')} Add another person</button>
         <div id="errorMessage" class="error-message" role="alert" hidden></div>
-        <button class="primary-button" type="submit">Calculate payments ${icon('arrow')}</button>
-        <p class="privacy-note">${icon('shield')} Sessions and groups stay in this browser. No account required.</p>
+        <button class="primary-button" type="submit">Show who pays who ${icon('arrow')}</button>
+        <p class="privacy-note">${icon('shield')} No account, no drama. Everything stays in this browser.</p>
       </form>
 
       <dialog id="groupDialog" class="group-dialog">
         <form method="dialog" id="groupForm">
-          <p class="step-label">Save this group</p>
-          <h2>Play together again.</h2>
-          <p>Give this group a name. Member names will be saved; balances will not.</p>
-          <label>Group name<input id="groupName" maxlength="40" autocomplete="off" placeholder="e.g. Friday Mahjong" required></label>
+          <p class="step-label">Save your table</p>
+          <h2>Same crew next game?</h2>
+          <p>Name the group once. We’ll remember the players, but every new round starts at $0.</p>
+          <label>Group name<input id="groupName" maxlength="40" autocomplete="off" placeholder="e.g. Hall Mahjong Kakis" required></label>
           <div class="dialog-actions">
             <button class="secondary-button" value="cancel" type="button" id="cancelGroupButton">Cancel</button>
-            <button class="primary-button" value="save" type="submit">Save group</button>
+            <button class="primary-button" value="save" type="submit">Save the crew</button>
           </div>
         </form>
       </dialog>
@@ -78,11 +78,11 @@ export function inputPage() {
 
     <section class="how-it-works" aria-labelledby="how-title">
       <p class="step-label">How it works</p>
-      <h2 id="how-title">From balances to settled in three steps.</h2>
+      <h2 id="how-title">Game over. Settle in three steps.</h2>
       <div class="steps">
-        <article><span>01</span><h3>Pick your group</h3><p>Load saved players or enter new names. Your session is remembered automatically.</p></article>
-        <article><span>02</span><h3>Set each balance</h3><p>Tap + or −, enter the amount, and make sure the group total is zero.</p></article>
-        <article><span>03</span><h3>Make the payments</h3><p>Get a clean, minimal list showing exactly who pays whom.</p></article>
+        <article><span>01</span><h3>Add your kakis</h3><p>Load your regular table or key in everyone playing tonight.</p></article>
+        <article><span>02</span><h3>Key in the damage</h3><p>Tap + or −, enter each result, and check that the table totals $0.</p></article>
+        <article><span>03</span><h3>PayNow and done</h3><p>Share the short payment list in your group chat and settle up.</p></article>
       </div>
     </section>
   `);

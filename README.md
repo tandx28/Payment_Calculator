@@ -1,6 +1,6 @@
 # Settle — Payment Calculator
 
-A fast, private group payment calculator. Enter each participant's final balance and Settle produces a minimal payment plan.
+A fast, private SGD payment calculator for Singapore university game nights. Enter each participant's mahjong, poker, or card-game result and Settle produces a clear payment plan.
 
 ## Local development
 

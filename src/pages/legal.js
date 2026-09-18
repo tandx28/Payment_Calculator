@@ -31,7 +31,7 @@ const pages = {
     title: 'Clear terms for a simple tool.',
     intro: 'By using Settle, you agree to these terms. If you do not agree, please do not use the service.',
     sections: [
-      ['The service', 'Settle provides estimates for simplifying payments within a group. It is an informational calculation tool, not a payment processor, bank, accountant, or financial adviser.'],
+      ['The service', 'Settle helps friends calculate who pays whom after social games such as mahjong, poker, and card games. It is an informational calculator, not a gambling service, payment processor, bank, accountant, or financial adviser.'],
       ['Your responsibility', 'You are responsible for checking all names, balances, currencies, and payment instructions before sending money. Only enter information you have the right to use.'],
       ['No warranties', 'The service is provided “as is” and “as available.” We do not guarantee uninterrupted operation or that every calculation will suit your circumstances.'],
       ['Limitation of liability', 'To the extent permitted by law, Settle’s maintainers are not liable for losses arising from use of, or reliance on, the service.'],
