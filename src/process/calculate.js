@@ -1,114 +1,37 @@
-export function calculateAmount(playersData) {
-    try {
-        // Validation
-        if (playersData.length <= 0) {
-            return 'Total amount of players are invalid.';
-        }
+export function calculateAmount(playersData = []) {
+  if (playersData.length < 2) {
+    return { error: 'Add at least two people before calculating.' };
+  }
 
-        const paymentResult = validateTotalNett(playersData);
-        return paymentResult;
-    } catch (err) {
-        console.log(`Error: ${err}`);
-    }
+  const total = playersData.reduce((sum, player) => sum + Number(player.value), 0);
+  if (!playersData.every((player) => Number.isFinite(Number(player.value)))) {
+    return { error: 'Every balance must be a valid number.' };
+  }
+  if (Math.abs(total) >= 0.005) {
+    return { error: `The balances are off by $${Math.abs(total).toFixed(2)}.` };
+  }
 
-}
+  const creditors = playersData
+    .map((player, index) => ({ ...player, index, cents: Math.round(player.value * 100) }))
+    .filter((player) => player.cents > 0);
+  const debtors = playersData
+    .map((player, index) => ({ ...player, index, cents: Math.round(player.value * 100) }))
+    .filter((player) => player.cents < 0)
+    .map((player) => ({ ...player, cents: Math.abs(player.cents) }));
 
-//* Validation for total nett for each player
-function validateTotalNett(playersData = []) {
-    let settledAmount = 0;
-    let totalNett = [];
-    playersData.forEach((player) => {
-        totalNett.push(player.value); 
-    })
+  const payments = [];
+  let creditorIndex = 0;
+  let debtorIndex = 0;
+  while (creditorIndex < creditors.length && debtorIndex < debtors.length) {
+    const creditor = creditors[creditorIndex];
+    const debtor = debtors[debtorIndex];
+    const cents = Math.min(creditor.cents, debtor.cents);
+    payments.push({ from: debtor.player, to: creditor.player, amount: cents / 100 });
+    creditor.cents -= cents;
+    debtor.cents -= cents;
+    if (creditor.cents === 0) creditorIndex += 1;
+    if (debtor.cents === 0) debtorIndex += 1;
+  }
 
-    totalNett.forEach((nett) => {
-        // Validation
-        if (isNaN(nett)) {
-            return `Invalid total nett is inputted. Input was ${nett}`;
-        }
-        console.log(nett);
-        settledAmount += nett;
-    })
-
-    // To ensure the total amount after settling is correct(e.g. 50 + 20 + (-15) + (-55)).
-    if (settledAmount !== 0) {
-
-        console.log('Incorrect total amount to be settled. Try again.') 
-
-        // Format negative and positive values
-        return `Incorrect nett amount to be settled, by ${
-            settledAmount > 0 ? '$' + settledAmount : '-$' + (-settledAmount)
-        }. Try again.`;
-    }
-
-    const paymentResult = cancelOut(totalNett);
-    return paymentResult
-}
-
-
-//* Function to cancel positive and negative player's nett
-function cancelOut(totalNett) {
-    let positiveIndex = 0;
-    let negativeIndex = 0;
-    let moneyNotSettled = true;
-    let information = "";
-
-    while (moneyNotSettled) {
-        let positive;
-        let negative;
-
-        // Declare latest positive and negative player's nett
-        for (let i = 0 ; i <= totalNett.length ; i++) {
-            if (totalNett[i] > 0 && positive == undefined) {
-                positive = totalNett[i];
-                positiveIndex = i;
-            }
-            else if (totalNett[i] < 0 && negative == undefined) {
-                negative = totalNett[i];
-                negativeIndex = i;
-            }
-
-            // Validate the input to ensure theres at least 1 positive and negative value.
-            if (positive !== undefined && negative !== undefined) {
-                break;
-            }
-
-        }
-
-        const payment = cancellation(totalNett, positiveIndex, negativeIndex);             // Calling of function
-        information += payment;
-
-
-        // Check if there are still money to be settled for any player. If it does, continue. Else, the while loop ends.
-        let amountPending = false;
-        for (let i = 0 ; i < totalNett.length ; i++) {
-            if (totalNett[i] !== 0) {
-                amountPending = true;
-                break;
-            }
-        }
-        amountPending ? moneyNotSettled = true : moneyNotSettled = false;
-
-
-
-    }
-
-    // After settling all the amount
-    information += '\nAll player amount has been settled. Have a good day!';
-
-    return information;
-}
-
-//* Cancellation method now + logging of information of cancellation(e.g. player 1 pays player 2 etc.)
-function cancellation(totalNett, positiveIndex, negativeIndex) {
-
-    const positive = totalNett[positiveIndex];
-    const negative = totalNett[negativeIndex];
-    let cancelAmount = Math.min(positive, Math.abs(negative));  // Determine cancellation amount
-
-    totalNett[positiveIndex] -= cancelAmount;  // Reduce positive number
-    totalNett[negativeIndex] += cancelAmount;  // Reduce (increase) negative number
-
-    // Log the cancellation
-    return `Player ${negativeIndex + 1} has to pay Player ${positiveIndex + 1} $${cancelAmount}.\n`;
+  return { payments };
 }
