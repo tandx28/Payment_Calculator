@@ -15,12 +15,12 @@ export function resultsPage() {
   app.innerHTML = shell(`
     <section class="results-hero">
       <div class="success-icon">${icon('check')}</div>
-      <p class="step-label">Ready to settle</p>
-      <h1>${result.payments.length} simple payment${result.payments.length === 1 ? '' : 's'}.</h1>
-      <p>That’s all it takes to bring every balance back to zero.</p>
+      <p class="step-label">Game over</p>
+      <h1>${result.payments.length} payment${result.payments.length === 1 ? '' : 's'}. Settle already.</h1>
+      <p>Clear these transfers and the whole table is square.</p>
     </section>
     <section class="results-card">
-      <div class="card-heading"><div><h2>Payment plan</h2><p>Work through this list from top to bottom.</p></div><span class="balance-pill is-balanced">Balanced</span></div>
+      <div class="card-heading"><div><h2>Who pays who</h2><p>Send this list to the group chat and settle from top to bottom.</p></div><span class="balance-pill is-balanced">All square</span></div>
       <div class="payment-list">
         ${result.payments.map((payment, index) => `
           <article class="payment-row">
@@ -30,12 +30,12 @@ export function resultsPage() {
           </article>`).join('') || '<div class="all-set">Everyone is already settled — no payments needed.</div>'}
       </div>
       <div class="result-actions">
-        <button id="copyButton" class="secondary-button" type="button">Copy summary</button>
-        <button id="backButton" class="primary-button" type="button">New round, same people ${icon('arrow')}</button>
+        <button id="copyButton" class="secondary-button" type="button">Copy for group chat</button>
+        <button id="backButton" class="primary-button" type="button">Run it back ${icon('arrow')}</button>
       </div>
     </section>
     <section class="balance-summary">
-      <h2>Group balances</h2>
+      <h2>Final scores</h2>
       <div>${playersData.map((player) => `<span><b>${escapeHtml(player.player)}</b><em class="${player.value >= 0 ? 'positive' : ''}">${formatCurrency(player.value)}</em></span>`).join('')}</div>
     </section>
   `);
@@ -49,7 +49,7 @@ export function resultsPage() {
     const summary = result.payments.map((payment) => `${payment.from} pays ${payment.to} $${payment.amount.toFixed(2)}`).join('\n');
     await navigator.clipboard.writeText(summary || 'Everyone is already settled.');
     event.currentTarget.textContent = 'Copied!';
-    setTimeout(() => { event.currentTarget.textContent = 'Copy summary'; }, 1600);
+    setTimeout(() => { event.currentTarget.textContent = 'Copy for group chat'; }, 1600);
   });
 }
 
