@@ -14,7 +14,7 @@ module.exports = {
       directory: path.resolve(__dirname, 'docs'), // Serve files from the docs directory
     },
     port: 9000, // Dev server port
-    open: true, // Automatically open the browser
+    open: false,
     hot: true, // Enable Hot Module Replacement
     historyApiFallback: true,
   },
@@ -34,5 +34,7 @@ module.exports = {
       template: './src/index.html', // Specify the HTML template
     }),
   ],
-  // mode: 'development', // Set the mode to development for easier debugging
+  optimization: {
+    minimize: true,
+  },
 };
