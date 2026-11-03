@@ -19,12 +19,37 @@ The production output is written to `docs/`. `vercel.json` configures Vercel to 
 
 ## Analytics and privacy
 
-Optional PayNow mobile numbers are stored only in this browser alongside group members. Payment QR images are generated locally using `qrcode`; no external QR endpoint receives payment data. Existing groups containing string member names remain supported.
+In the solo calculator, optional PayNow mobile numbers stay in this browser alongside group members. In shared tables, information is sent to the session server as described below. Payment QR images are generated locally using `qrcode`; no external QR endpoint receives payment data. Existing groups containing string member names remain supported.
 
 Each transfer uses its recipient's row index, even when names match. The QR encodes a Singapore mobile proxy, SGD currency (`702`), a fixed amount, and an EMVCo CRC-16/CCITT-FALSE checksum. The bank resolves the registered recipient name; Settle does not claim that a user-entered name is bank verified. Codes do not expire and can be reused, so check for duplicate payments.
 
 QR encoding and decoding tests run with `npm test`. Actual bank-app acceptance, photo import, and native file sharing need device testing. The feature is labelled beta until that testing is complete; no payment is ever initiated automatically or marked confirmed.
 
-Vercel Web Analytics is loaded through `@vercel/analytics`. Visitors can disable analytics from the Cookie Policy page. Calculator data stays in browser local storage.
+Vercel Web Analytics is loaded through `@vercel/analytics`. Visitors can disable analytics from the Cookie Policy page. Session identifiers, invitation fragments, and query strings are redacted from analytics URLs. Solo calculator data stays in browser local storage.
+
+## Shared tables
+
+`/sessions` creates a 24-hour table. The host shares the invite from **Copy invite link**. Participants enter their own name, result, and optional PayNow number. The host starts the round to lock the roster. Each participant saves their result, then marks ready; a positive balance requires a PayNow number so a payment QR can be generated. A server-enforced transition unlocks settlement only when every roster member is ready and the integer-cent total is zero. All-zero rounds need no payments.
+
+The host sees ready status and can reopen the lobby or start a fresh round after settlement. Editing a result clears that participant’s ready status. Results lock after settlement. The session screen polls every five seconds while visible, pauses when hidden, and stops when navigating away. Saved access lets each browser resume its own seat without an account. Clearing browser data loses that access; the invite does not restore host privileges.
+
+### Production storage setup (existing Vercel project)
+
+1. Add an **Upstash for Redis** database through Vercel → Payment Calculator → Storage. Choose a free plan if available and review any terms before provisioning.
+2. Connect it to this project for Production (and optionally Preview). Automatic environment variables `KV_REST_API_URL` / `KV_REST_API_TOKEN` are accepted; `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` also work.
+3. Redeploy after connecting storage. `/api/sessions?action=health` must return `available: true`, then test creating and joining from two separate browsers or devices.
+
+No credentials go in the source, browser bundle, URL, or GitHub. Production returns 503 when storage is absent; it never silently substitutes per-instance memory. Requests use server-side authenticated HTTPS POST to Redis. Atomic compare-and-set prevents concurrent writes from losing results. Expiry is fixed at creation using Redis PXAT, not extended by activity. Guest tokens and host tokens are distinct from invite access, and server storage contains only token hashes. PayNow numbers are visible only to their owner until settlement, then to table participants for payment. Names, results, and readiness are visible to all joined members. Anyone with the invite can join the open lobby, so use a private group chat.
+
+### Local shared-session preview
+
+```bash
+npm run build
+npm run preview:shared
+```
+
+Open `http://127.0.0.1:9100/sessions`. This explicit local demo uses temporary in-memory storage. It is only for development; restarting it loses demo tables. It is never imported by the production API. Use different browser profiles/devices to represent different participants (tabs share browser credentials).
+
+`npm test` covers host/guest permissions, invite privilege boundaries, exact-zero gating, readiness changes, settlement locking, stale concurrent edits, concurrent joins, private mobile visibility, invalid requests, and expiry, as well as the QR encoder.
 
 The included Privacy Policy, Cookie Policy, and Terms are project templates and should be reviewed by a qualified professional before commercial use.

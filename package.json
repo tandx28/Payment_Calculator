@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "main": "calculation.js",
   "scripts": {
+    "preview:shared": "node scripts/preview.mjs --memory",
     "test": "node --experimental-default-type=module --test tests/*.test.mjs",
     "dev": "webpack serve --config webpack.config.js --mode development",
     "build": "webpack --config webpack.config.js --mode production",

@@ -33,6 +33,7 @@ export function inputPage() {
     </section>
 
     <section class="calculator-card" aria-labelledby="calculator-title">
+      <aside class="shared-banner"><div><strong>Everyone on their own phone?</strong><p>Host a shared table. Your kakis join, enter their results, and mark ready.</p></div><a href="/sessions" data-link class="compact-button">Host a table</a></aside>
       <div class="card-heading">
         <div>
           <p class="step-label">Step 1 of 1</p>

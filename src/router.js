@@ -1,6 +1,7 @@
 import { inputPage } from './pages/input';
 import { resultsPage } from './pages/results';
 import { legalPage } from './pages/legal';
+import { createSessionPage, sessionPage } from './pages/session';
 
 const routes = {
   '/': inputPage,
@@ -9,11 +10,16 @@ const routes = {
   '/privacy': () => legalPage('privacy'),
   '/cookies': () => legalPage('cookies'),
   '/terms': () => legalPage('terms'),
+  '/sessions': createSessionPage,
 };
 
+let cleanup;
+
 export function router() {
-  const route = routes[window.location.pathname] || inputPage;
-  route();
+  cleanup?.();
+  const room = window.location.pathname.match(/^\/session\/([a-f0-9]{32})$/);
+  const route = room ? () => sessionPage(room[1]) : routes[window.location.pathname] || inputPage;
+  cleanup = route();
   window.scrollTo({ top: 0, behavior: 'instant' });
 }
 

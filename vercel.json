@@ -4,6 +4,18 @@
   "buildCommand": "npm run build",
   "outputDirectory": "docs",
   "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
-  ]
+    { "source": "/input", "destination": "/index.html" },
+    { "source": "/results", "destination": "/index.html" },
+    { "source": "/privacy", "destination": "/index.html" },
+    { "source": "/cookies", "destination": "/index.html" },
+    { "source": "/terms", "destination": "/index.html" },
+    { "source": "/sessions", "destination": "/index.html" },
+    { "source": "/session/:id", "destination": "/index.html" }
+  ],
+  "functions": { "api/sessions.js": { "includeFiles": "server/**" } },
+  "headers": [{ "source": "/session/:id", "headers": [
+    { "key": "Cache-Control", "value": "private, no-store" },
+    { "key": "Referrer-Policy", "value": "no-referrer" },
+    { "key": "X-Robots-Tag", "value": "noindex, nofollow" }
+  ] }]
 }

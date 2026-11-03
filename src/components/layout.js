@@ -20,6 +20,7 @@ export function shell(content, { compact = false } = {}) {
         </a>
         <nav aria-label="Primary navigation">
           <a href="/" data-link>Calculator</a>
+          <a href="/sessions" data-link>Shared table</a>
           <a href="/privacy" data-link>Privacy</a>
         </nav>
       </header>
