@@ -1,21 +1,26 @@
+import { amountInCents } from './paynow.mjs';
+
 export function calculateAmount(playersData = []) {
   if (playersData.length < 2) {
     return { error: 'Add at least two people before calculating.' };
   }
 
-  const total = playersData.reduce((sum, player) => sum + Number(player.value), 0);
-  if (!playersData.every((player) => Number.isFinite(Number(player.value)))) {
-    return { error: 'Every balance must be a valid number.' };
+  let balances;
+  try {
+    balances = playersData.map((player) => amountInCents(player.value));
+  } catch (error) {
+    return { error: error.message };
   }
-  if (Math.abs(total) >= 0.005) {
-    return { error: `The balances are off by $${Math.abs(total).toFixed(2)}.` };
+  const total = balances.reduce((sum, cents) => sum + cents, 0);
+  if (total !== 0) {
+    return { error: `The balances are off by $${(Math.abs(total) / 100).toFixed(2)}.` };
   }
 
   const creditors = playersData
-    .map((player, index) => ({ ...player, index, cents: Math.round(player.value * 100) }))
+    .map((player, index) => ({ ...player, index, cents: balances[index] }))
     .filter((player) => player.cents > 0);
   const debtors = playersData
-    .map((player, index) => ({ ...player, index, cents: Math.round(player.value * 100) }))
+    .map((player, index) => ({ ...player, index, cents: balances[index] }))
     .filter((player) => player.cents < 0)
     .map((player) => ({ ...player, cents: Math.abs(player.cents) }));
 
@@ -26,7 +31,7 @@ export function calculateAmount(playersData = []) {
     const creditor = creditors[creditorIndex];
     const debtor = debtors[debtorIndex];
     const cents = Math.min(creditor.cents, debtor.cents);
-    payments.push({ from: debtor.player, to: creditor.player, amount: cents / 100 });
+    payments.push({ from: debtor.player, to: creditor.player, fromIndex: debtor.index, toIndex: creditor.index, amount: cents / 100 });
     creditor.cents -= cents;
     debtor.cents -= cents;
     if (creditor.cents === 0) creditorIndex += 1;

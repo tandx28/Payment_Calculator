@@ -1,5 +1,7 @@
 import { navigateTo } from '../router';
 import { icon, shell } from '../components/layout';
+import { normalizeMobile, amountInCents } from '../process/paynow.mjs';
+import { normalizeMember, readStorage } from '../process/storage.mjs';
 
 const defaultPlayers = [
   { name: '', value: '' },
@@ -60,6 +62,7 @@ export function inputPage() {
         <div id="errorMessage" class="error-message" role="alert" hidden></div>
         <button class="primary-button" type="submit">Show who pays who ${icon('arrow')}</button>
         <p class="privacy-note">${icon('shield')} No account, no drama. Everything stays in this browser.</p>
+        <p class="phone-note">Add a PayNow-registered mobile below a name to create their payment QR. Optional; saved with your group on this device.</p>
       </form>
 
       <dialog id="groupDialog" class="group-dialog">
@@ -101,6 +104,9 @@ export function inputPage() {
       const multiplier = row.dataset.sign === '-' ? -1 : 1;
       return {
         name: row.querySelector('[name="name"]').value,
+        mobile: row.querySelector('[name="mobile"]').value,
+        invalidAmount: Number(amount) < 0,
+        sign: row.dataset.sign,
         value: amount === '' ? '' : String(multiplier * Number(amount)),
       };
     });
@@ -118,13 +124,16 @@ export function inputPage() {
     playerInputs.innerHTML = '';
     data.forEach((player, index) => {
       const numericValue = Number(player.value);
-      const sign = player.value !== '' && numericValue < 0 ? '-' : '+';
+      const sign = numericValue < 0 || (numericValue === 0 && player.sign === '-') ? '-' : '+';
       const amount = player.value === '' ? '' : Math.abs(numericValue);
       const row = document.createElement('div');
       row.className = 'player-row';
       row.dataset.sign = sign;
       row.innerHTML = `
-        <label><span class="mobile-label">Person</span><input name="name" type="text" maxlength="40" autocomplete="off" placeholder="Name" value="${escapeHtml(player.name)}" aria-label="Person ${index + 1} name"></label>
+        <div class="person-fields">
+          <label><span class="mobile-label">Person</span><input name="name" type="text" maxlength="40" autocomplete="off" placeholder="Name" value="${escapeHtml(player.name)}" aria-label="Person ${index + 1} name"></label>
+          <label class="phone-field"><span>PayNow mobile (optional)</span><input name="mobile" type="tel" inputmode="tel" maxlength="24" autocomplete="off" placeholder="8-digit mobile" value="${escapeHtml(player.mobile || '')}" aria-label="Person ${index + 1} PayNow mobile"></label>
+        </div>
         <button class="sign-toggle ${sign === '-' ? 'is-negative' : ''}" type="button" aria-label="Person ${index + 1} balance sign: ${sign === '-' ? 'negative' : 'positive'}" aria-pressed="${sign === '-'}">${sign === '-' ? '−' : '+'}</button>
         <label class="money-input"><span class="mobile-label">Balance (SGD)</span><span class="currency">$</span><input name="value" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0.00" value="${escapeHtml(amount)}" aria-label="Person ${index + 1} balance amount"></label>
         <button class="icon-button" type="button" aria-label="Remove person ${index + 1}" ${data.length <= 2 ? 'disabled' : ''}>${icon('trash')}</button>`;
@@ -160,7 +169,7 @@ export function inputPage() {
       localStorage.removeItem(ACTIVE_GROUP_KEY);
       return;
     }
-    const members = group.members.map((name) => ({ name, value: '' }));
+    const members = group.members.map((member) => ({ ...normalizeMember(member), value: '' }));
     renderRows(members.length >= 2 ? members : defaultPlayers);
     localStorage.setItem(ACTIVE_GROUP_KEY, group.id);
     showGroupStatus(`${group.name} loaded. Add this round’s balances.`);
@@ -179,13 +188,20 @@ export function inputPage() {
   document.getElementById('groupForm').addEventListener('submit', (event) => {
     event.preventDefault();
     const name = groupName.value.trim();
-    const members = readRows().map((player) => player.name.trim()).filter(Boolean);
+    const members = readRows().map((player) => ({ name: player.name.trim(), mobile: player.mobile.trim() })).filter((player) => player.name);
     if (!name || members.length < 2) {
       groupName.setCustomValidity(!name ? 'Enter a group name.' : 'Add names for at least two people first.');
       groupName.reportValidity();
       return;
     }
     groupName.setCustomValidity('');
+    try {
+      members.forEach((member) => { if (member.mobile) member.mobile = normalizeMobile(member.mobile); });
+    } catch (error) {
+      groupName.setCustomValidity(error.message);
+      groupName.reportValidity();
+      return;
+    }
     const selectedId = groupSelect.value;
     const existingIndex = groups.findIndex((group) => group.id === selectedId || group.name.toLowerCase() === name.toLowerCase());
     const savedGroup = { id: existingIndex >= 0 ? groups[existingIndex].id : `group-${Date.now()}`, name, members };
@@ -218,10 +234,21 @@ export function inputPage() {
   document.getElementById('playerForm').addEventListener('submit', (event) => {
     event.preventDefault();
     const rows = readRows();
-    const playersData = rows.map((player, index) => ({
+    if (rows.some((player) => player.invalidAmount)) {
+      showError('Enter the amount without a sign, then use the + / − button to choose won or lost.');
+      return;
+    }
+    let playersData;
+    try {
+      playersData = rows.map((player, index) => ({
       player: player.name.trim() || `Person ${index + 1}`,
-      value: Number(player.value),
-    }));
+      mobile: player.mobile.trim() ? normalizeMobile(player.mobile) : '',
+      value: amountInCents(player.value) / 100,
+      }));
+    } catch (error) {
+      showError(error.message);
+      return;
+    }
     const total = playersData.reduce((sum, player) => sum + player.value, 0);
 
     if (rows.some((player) => player.value === '' || !Number.isFinite(Number(player.value)))) {
@@ -258,15 +285,6 @@ export function inputPage() {
 function readGroups() {
   const groups = readStorage(GROUPS_KEY, []);
   return Array.isArray(groups) ? groups.filter((group) => group && group.id && group.name && Array.isArray(group.members)) : [];
-}
-
-function readStorage(key, fallback) {
-  try {
-    const value = localStorage.getItem(key);
-    return value ? JSON.parse(value) : fallback;
-  } catch {
-    return fallback;
-  }
 }
 
 function formatCurrency(value) {
