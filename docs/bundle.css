@@ -203,3 +203,53 @@ footer p { margin: 0; }
 }
 
 @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; transition: none !important; } }
+
+.shared-banner { display: flex; align-items: center; gap: 20px; justify-content: space-between; padding: 18px; margin: 0 0 28px; border: 1px solid rgba(201,247,103,.2); border-radius: 14px; background: rgba(201,247,103,.05); }
+.shared-banner strong { font-size: 14px; }
+.shared-banner p { margin: 5px 0 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+.shared-banner a { display: grid; place-items: center; flex-shrink: 0; }
+.shared-intro { max-width: 760px; margin: 64px auto 32px; }
+.shared-intro h1 { font: 800 clamp(38px, 7vw, 62px)/1.1 Manrope, sans-serif; letter-spacing: -.05em; margin-bottom: 18px; overflow-wrap: anywhere; }
+.shared-intro > p:last-child { color: var(--muted); font-size: 16px; line-height: 1.7; }
+.shared-create, .room-card { margin-bottom: 100px; }
+.shared-create label { display: grid; gap: 8px; font-size: 12px; color: var(--muted); margin-bottom: 18px; }
+.shared-create input { width: 100%; min-width: 0; height: 48px; padding: 0 13px; background: rgba(5,18,14,.66); border: 1px solid var(--line); border-radius: 10px; color: var(--ink); outline-color: var(--lime); }
+.shared-disclosure { color: var(--muted); font-size: 12px; line-height: 1.7; }
+.shared-back { margin: 24px 0 0; }
+.shared-create button:disabled, .room-card button:disabled { opacity: .5; cursor: not-allowed; }
+.room-message { padding: 14px; background: rgba(201,247,103,.06); border: 1px solid var(--line); border-radius: 10px; font-size: 13px; line-height: 1.6; overflow-wrap: anywhere; }
+.room-stats { display: flex; gap: 12px; justify-content: space-between; flex-wrap: wrap; padding: 22px 0; font-size: 13px; border-bottom: 1px solid var(--line); }
+.room-stats .positive { color: var(--lime); }
+.room-off-balance { color: var(--danger); }
+.host-controls { display: flex; flex-wrap: wrap; gap: 10px; padding: 8px 0; }
+.host-controls .primary-button { width: auto; }
+.host-controls [hidden], [hidden] { display: none !important; }
+.roster-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 12px; padding: 18px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
+.roster-row > div { display: grid; gap: 4px; overflow-wrap: anywhere; }
+.roster-row small { font-size: 10px; color: var(--muted); }
+.ready-badge, .waiting-badge { padding: 6px 9px; border-radius: 999px; font-size: 10px; white-space: nowrap; }
+.ready-badge { background: rgba(201,247,103,.1); color: var(--lime); }
+.waiting-badge { background: rgba(255,255,255,.04); color: var(--muted); }
+.roster-remove { grid-column: 1 / -1; justify-self: start; padding: 4px 0; border: 0; background: transparent; color: var(--danger); cursor: pointer; font-size: 11px; }
+.own-result { margin: 0; padding-top: 28px; }
+.own-result h2, .shared-payments h2 { font-size: 22px; letter-spacing: -.03em; }
+.room-result-input { display: grid; grid-template-columns: 52px minmax(0, 1fr); gap: 10px; align-items: end; margin-top: 24px; }
+.room-result-input .sign-toggle { height: 48px; margin-bottom: 18px; }
+.shared-payments { padding-top: 28px; }
+.shared-payments > p { color: var(--muted); font-size: 13px; line-height: 1.6; }
+.shared-transfer { border: 1px solid var(--line); background: rgba(5,18,14,.4); padding: 20px; border-radius: 14px; margin-top: 14px; }
+.shared-transfer.my-transfer { border-color: rgba(201,247,103,.45); }
+.shared-transfer p { line-height: 1.7; font-size: 14px; overflow-wrap: anywhere; }
+.shared-transfer p b { color: var(--lime); }
+.shared-qr { display: grid; gap: 12px; place-items: center; max-width: 100%; margin: 0 auto; padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: #fff; color: #10251f; cursor: pointer; }
+.shared-qr canvas { display: block; max-width: 100%; height: auto !important; }
+.shared-qr span { font-size: 11px; }
+@media (max-width: 720px) {
+  .shared-banner { flex-direction: column; align-items: stretch; }
+  .shared-intro { margin-top: 48px; }
+  .roster-row { gap: 7px; font-size: 12px; }
+  .host-controls { flex-direction: column; }
+  .host-controls button { width: 100%; }
+  nav { font-size: 12px; gap: 12px; }
+  .shared-create .dialog-actions { grid-template-columns: 1fr; }
+}

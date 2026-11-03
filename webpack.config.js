@@ -8,7 +8,7 @@ module.exports = {
     filename: 'bundle.js', // Output bundled file name
     path: path.resolve(__dirname, 'docs'), // Output directory
     clean: true, // Clean the docs folder before each build
-    publicPath: '',
+    publicPath: '/',
   },
   devServer: {
     static: {
