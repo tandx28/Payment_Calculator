@@ -1,6 +1,6 @@
 import { shell, icon } from '../components/layout';
 
-const updated = '18 September 2026';
+const updated = '3 November 2026';
 
 const pages = {
   privacy: {
@@ -8,7 +8,8 @@ const pages = {
     title: 'Your numbers are yours.',
     intro: 'Settle is designed to calculate group payments without accounts, profiles, or storing your financial details on a server.',
     sections: [
-      ['What we process', 'Names, balances, active sessions, and groups you save are processed locally in your browser. They are not uploaded to Settle. Do not enter sensitive personal information.'],
+      ['What we process', 'Names, balances, optional PayNow mobile numbers, active sessions, and saved groups are processed in your browser and stored on this device. Only save someone’s number with their permission. Settle does not verify that a number is registered with PayNow.'],
+      ['Payment QRs and sharing', 'Payment QRs are generated on your device without an external QR service. Each code contains the payee’s mobile number and SGD amount. Downloading or sharing it exposes those details to anyone who receives it. Payment details are not included in website URLs or analytics events.'],
       ['Analytics', 'We use Vercel Web Analytics to understand aggregate visits and page views. It is designed without cookies and does not show us individual visitor identities. You can disable analytics from the Cookie Policy.'],
       ['Hosting and service data', 'Vercel hosts this website and may process technical request data such as IP addresses, device information, and timestamps for security, delivery, and reliability. Their handling of that data is governed by Vercel’s own privacy terms.'],
       ['Retention and control', 'Sessions and saved groups remain on this device until you delete a group or clear this site’s browser storage. Analytics data follows the retention settings of the site’s Vercel account.'],
@@ -20,7 +21,7 @@ const pages = {
     title: 'No tracking cookies.',
     intro: 'Settle does not use advertising cookies or cross-site tracking. It uses browser storage only to make the calculator work and remember your preference.',
     sections: [
-      ['Local storage', 'We use local storage for your current session, saved groups, selected group, and analytics preference. This information stays on your device and is not a cookie.'],
+      ['Local storage', 'We use local storage for your current session, names, optional PayNow mobile numbers, saved groups, selected group, and analytics preference. This information stays on your device and is not a cookie.'],
       ['Vercel Web Analytics', 'Our audience measurement is cookieless. It provides aggregate information such as page views and visitor counts without creating advertising profiles.'],
       ['Your choices', 'You can disable analytics below. You can also remove calculator data at any time by clearing this site’s data in your browser settings.'],
     ],
@@ -33,6 +34,7 @@ const pages = {
     sections: [
       ['The service', 'Settle helps friends calculate who pays whom after social games such as mahjong, poker, and card games. It is an informational calculator, not a gambling service, payment processor, bank, accountant, or financial adviser.'],
       ['Your responsibility', 'You are responsible for checking all names, balances, currencies, and payment instructions before sending money. Only enter information you have the right to use.'],
+      ['Payment QRs', 'Generated PayNow QRs are a beta feature; compatibility has not been confirmed across banking apps. Check the bank-displayed recipient name and amount before authorising any transfer. Generating, copying, downloading, or sharing a QR does not transfer funds or confirm payment. Settle cannot determine whether a transfer succeeded.'],
       ['No warranties', 'The service is provided “as is” and “as available.” We do not guarantee uninterrupted operation or that every calculation will suit your circumstances.'],
       ['Limitation of liability', 'To the extent permitted by law, Settle’s maintainers are not liable for losses arising from use of, or reliance on, the service.'],
       ['Changes', 'We may update the service or these terms. The date below shows when this page was last revised. Continued use after an update means you accept the revised terms.'],
