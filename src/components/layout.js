@@ -29,6 +29,7 @@ export function shell(content, { compact = false } = {}) {
         <a class="brand brand--small" href="/" data-link><span class="brand-mark">S</span><span>Settle</span></a>
         <p>Game nights settled. No account needed.</p>
         <div class="footer-links">
+          <a href="/install" data-link>Get the app</a>
           <a href="/privacy" data-link>Privacy</a>
           <a href="/cookies" data-link>Cookies</a>
           <a href="/terms" data-link>Terms</a>
