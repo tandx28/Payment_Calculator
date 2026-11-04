@@ -70,12 +70,16 @@ export function changeRoom(original, actor, input) {
         room.phase = 'collecting';
         room.members.forEach((person) => { person.ready = false; });
         break;
+      case 'submit':
       case 'update': {
         if (room.phase === 'settled') throw new RoomError('This round is locked. Ask the host to start a new round.', 409);
+        if (input.action === 'submit' && room.phase !== 'collecting') throw new RoomError('Wait for the host to start the round.', 409);
         const person = room.members.find((member) => member.id === actor.id);
+        if (input.action === 'submit' && person.ready) throw new RoomError('Edit your result before submitting again.', 409);
         try { person.cents = amountInCents(input.value); } catch (error) { throw new RoomError(error.message); }
         person.mobile = mobile(input.mobile);
-        person.ready = false;
+        if (input.action === 'submit' && person.cents > 0 && !person.mobile) throw new RoomError('You’re up! Add your PayNow mobile so your friends can scan to pay.');
+        person.ready = input.action === 'submit';
         break;
       }
       case 'ready': {
@@ -131,7 +135,7 @@ export function createRoomService(store, clock = Date.now) {
   return {
     async create(input) {
       const created = createRoom(input, clock());
-      await store.create(created.room.id, JSON.stringify(created.room), created.room.expiresAt);
+      await store.create(created.room.id, JSON.stringify(created.room), created.room.expiresAt, input.analytics === true ? ['tables_created'] : []);
       return { ...publicRoom(created.room, { id: created.room.hostId, host: true }), token: created.hostToken, inviteToken: created.inviteToken };
     },
     async access(id, token, input) {
@@ -144,7 +148,14 @@ export function createRoomService(store, clock = Date.now) {
         const actor = authenticate(room, token);
         if (!input) return publicRoom(room, actor);
         const updated = changeRoom(room, actor, input);
-        if (await store.compareAndSet(id, raw, JSON.stringify(updated), room.expiresAt)) {
+        const metrics = [];
+        if (input.analytics === true) {
+          if (updated.members.length > room.members.length) metrics.push('players_joined');
+          if (input.action === 'start') metrics.push('rounds_started');
+          if (input.action === 'submit') metrics.push('results_submitted');
+          if (room.phase !== 'settled' && updated.phase === 'settled') metrics.push('payment_plans_unlocked');
+        }
+        if (await store.compareAndSet(id, raw, JSON.stringify(updated), room.expiresAt, metrics)) {
           const viewer = input.action === 'join' ? authenticate(updated, input.playerToken) : actor;
           return publicRoom(updated, viewer);
         }
