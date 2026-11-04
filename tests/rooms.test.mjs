@@ -91,6 +91,63 @@ test('winner needs a PayNow mobile for QR; zero and negative results do not', as
   await assert.rejects(act(service, host, host.token, 'update', { value: 0.001 }), /decimal/);
 });
 
+test('one submission atomically saves a result and readiness, after the host starts', async () => {
+  const { service, host, guestToken } = await table();
+  await assert.rejects(act(service, host, guestToken, 'submit', { value: -20 }), /host to start/);
+  assert.equal((await service.access(host.id, guestToken)).members.find((p) => !p.host).cents, null);
+  await act(service, host, host.token, 'start');
+  await assert.rejects(act(service, host, host.token, 'submit', { value: 20, mobile: '' }), /PayNow mobile/);
+  let latest = await service.access(host.id, host.token);
+  assert.equal(latest.members.find((p) => p.host).cents, null);
+  assert.equal(latest.members.find((p) => p.host).ready, false);
+  await act(service, host, host.token, 'submit', { value: 20, mobile: '91234567', memberId: 'someone-else' });
+  latest = await act(service, host, guestToken, 'submit', { value: -19 });
+  assert.equal(latest.phase, 'collecting');
+  assert.ok(latest.members.every((p) => p.ready));
+  await assert.rejects(act(service, host, guestToken, 'submit', { value: -20 }), /Edit your result/);
+  await act(service, host, guestToken, 'unready');
+  latest = await act(service, host, guestToken, 'submit', { value: -20 });
+  assert.equal(latest.phase, 'settled');
+  assert.equal(latest.members.find((p) => !p.host).cents, -2000);
+  await assert.rejects(act(service, host, guestToken, 'submit', { value: -50 }), /locked/);
+});
+
+test('concurrent submissions cannot lose results or prematurely unlock a payment plan', async () => {
+  const { service, host, guestToken } = await table();
+  const started = await act(service, host, host.token, 'start');
+  const results = await Promise.allSettled([
+    service.access(host.id, host.token, { action: 'submit', version: started.version, value: 10, mobile: '91234567' }),
+    service.access(host.id, guestToken, { action: 'submit', version: started.version, value: -10 }),
+  ]);
+  assert.equal(results.filter((r) => r.status === 'fulfilled').length, 1);
+  let latest = await service.access(host.id, host.token);
+  assert.equal(latest.phase, 'collecting');
+  assert.equal(latest.members.filter((p) => p.ready).length, 1);
+  const remaining = latest.members.find((p) => !p.ready);
+  latest = await act(service, host, remaining.host ? host.token : guestToken, 'submit', { value: remaining.host ? 10 : -10, mobile: remaining.host ? '91234567' : '' });
+  assert.equal(latest.phase, 'settled');
+});
+
+test('aggregate metrics count successful actions, exclude join retries, and honor opt-out', async () => {
+  const base = createMemoryStore();
+  const recorded = [];
+  const store = { ...base,
+    create: async (...args) => { await base.create(...args); recorded.push(...args[3]); },
+    compareAndSet: async (...args) => { const ok = await base.compareAndSet(...args); if (ok) recorded.push(...args[4]); return ok; },
+  };
+  const service = createRoomService(store);
+  const host = await service.create({ name: 'Alex', analytics: true });
+  const guestToken = secret();
+  const join = { action: 'join', name: 'Ben', playerToken: guestToken, analytics: true };
+  await service.access(host.id, host.inviteToken, join);
+  await service.access(host.id, host.inviteToken, join);
+  await act(service, host, host.token, 'start', { analytics: true });
+  await assert.rejects(act(service, host, host.token, 'submit', { value: 10, analytics: true }), /PayNow/);
+  await act(service, host, host.token, 'submit', { value: 10, mobile: '91234567', analytics: false });
+  await act(service, host, guestToken, 'submit', { value: -10, analytics: true });
+  assert.deepEqual(recorded, ['tables_created', 'players_joined', 'rounds_started', 'results_submitted', 'payment_plans_unlocked']);
+});
+
 test('simultaneous writes cannot overwrite a newer result', async () => {
   const { service, host, guestToken } = await table();
   const version = (await service.access(host.id, host.token)).version;
@@ -163,5 +220,11 @@ test('Redis commands use absolute expiry and atomic compare-and-set over authent
     assert.match(calls[1].args[1], /redis.call\('GET'/);
     assert.equal(calls[0].options.method, 'POST');
     assert.equal(calls[0].options.headers.Authorization, 'Bearer server-only-token');
+    await store.create('room2', 'value', 123456789, ['tables_created']);
+    assert.equal(calls[2].args[0], 'EVAL');
+    assert.match(calls[2].args[1], /HINCRBY/);
+    assert.match(calls[2].args[4], /^settle:metrics:(preview|production):\d{4}-\d{2}-\d{2}$/);
+    assert.equal(calls[2].args.at(-1), '["tables_created"]');
+    assert.match(calls[1].args[1], /return 0 end[\s\S]*HINCRBY/);
   } finally { globalThis.fetch = original; }
 });

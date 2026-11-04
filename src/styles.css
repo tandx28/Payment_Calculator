@@ -224,6 +224,12 @@ footer p { margin: 0; }
 .room-off-balance { color: var(--danger); }
 .host-controls { display: flex; flex-wrap: wrap; gap: 10px; padding: 8px 0; }
 .host-controls .primary-button { width: auto; }
+.invite-qr-panel { margin-top: 20px; padding: 20px; border: 1px solid var(--line); border-radius: 14px; text-align: center; }
+.invite-qr-panel h2 { font-size: 22px; }
+.invite-qr-panel p, .balance-summary { font-size: 13px; line-height: 1.7; }
+.invite-qr-panel canvas { display: block; width: min(100%, 360px); height: auto !important; margin: 18px auto; border-radius: 10px; }
+.balance-summary { padding: 16px 0 0; color: var(--muted); }
+.balance-summary.room-off-balance { color: var(--danger); }
 .host-controls [hidden], [hidden] { display: none !important; }
 .roster-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 12px; padding: 18px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
 .roster-row > div { display: grid; gap: 4px; overflow-wrap: anywhere; }

@@ -29,9 +29,15 @@ Vercel Web Analytics is loaded through `@vercel/analytics`. Visitors can disable
 
 ## Shared tables
 
-`/sessions` creates a 24-hour table. The host shares the invite from **Copy invite link**. Participants enter their own name, result, and optional PayNow number. The host starts the round to lock the roster. Each participant saves their result, then marks ready; a positive balance requires a PayNow number so a payment QR can be generated. A server-enforced transition unlocks settlement only when every roster member is ready and the integer-cent total is zero. All-zero rounds need no payments.
+`/sessions` creates a 24-hour table. The host shares **Copy invite link** or **Show join QR** in the lobby. The QR encodes only the same join invitation fragment, never the host credential; it is generated locally. Participants join with their own name and optional PayNow number. Once everyone joins, the host starts the round to lock the roster. The result editor appears after the start, with a single **Save & ready** button. The server atomically saves the amount, validates the PayNow number, and marks that participant ready. A failed validation saves neither the amount nor readiness. Positive results require a PayNow number. Winnings, losses, missing results and any exact difference are displayed explicitly. Settlement unlocks only when everyone is ready and the integer-cent total is zero. All-zero rounds need no payments.
 
 The host sees ready status and can reopen the lobby or start a fresh round after settlement. Editing a result clears that participant’s ready status. Results lock after settlement. The session screen polls every five seconds while visible, pauses when hidden, and stops when navigating away. Saved access lets each browser resume its own seat without an account. Clearing browser data loses that access; the invite does not restore host privileges.
+
+### Free usage analytics
+
+Enable Vercel Web Analytics in the existing project's Analytics dashboard for visitor estimates and page views. Custom Vercel events require Pro, so this app instead keeps aggregate action counts in the existing Redis database. No new service or paid upgrade is required. Counts are stored in hashes `settle:metrics:production:YYYY-MM-DD` (UTC date), expiring after 90 days. Preview and local environments use the separate `settle:metrics:preview:` prefix. View production hashes in the Upstash Data Browser or run `HGETALL settle:metrics:production:YYYY-MM-DD` in its console. These counters are never exposed by the public session API.
+
+Fields are `tables_created`, `players_joined` (excluding retried joins), `rounds_started`, `results_submitted` (successful Save & ready actions, including corrections), and `payment_plans_unlocked`. These are action counts, not unique users or completed bank transfers. Counters are written atomically with successful session changes, exclude failed/stale requests, and contain no names, phone numbers, room IDs, results or amounts. Cookie Policy opt-out is sent with each mutation and suppresses its analytics. There is no payment-confirmation feature, so no payment-confirmed metric is collected. Opt-outs mean the counts are partial; they are not a cohort conversion funnel.
 
 ### Production storage setup (existing Vercel project)
 
