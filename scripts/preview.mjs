@@ -17,11 +17,11 @@ http.createServer(async (req, res) => {
       req.body = body || undefined;
       return handler(req, res);
     }
-    const route = ['/', '/input', '/results', '/sessions', '/privacy', '/cookies', '/terms'].includes(pathname) || /^\/session\/[a-f0-9]{32}$/.test(pathname);
+    const route = ['/', '/input', '/results', '/sessions', '/install', '/privacy', '/cookies', '/terms'].includes(pathname) || /^\/session\/[a-f0-9]{32}$/.test(pathname);
     const path = resolve(root, route ? 'index.html' : `.${pathname}`);
     if (!path.startsWith(root)) { res.writeHead(404); res.end(); return; }
     const data = await readFile(path);
-    res.setHeader('Content-Type', { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css' }[extname(path)] || 'application/octet-stream');
+    res.setHeader('Content-Type', { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.webmanifest': 'application/manifest+json', '.png': 'image/png' }[extname(path)] || 'application/octet-stream');
     res.end(data);
   } catch { res.writeHead(404); res.end('Not found'); }
 }).listen(9100, '127.0.0.1', () => console.log('Local shared-session demo: http://127.0.0.1:9100/sessions (in-memory test data only)'));
