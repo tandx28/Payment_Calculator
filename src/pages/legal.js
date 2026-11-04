@@ -1,6 +1,6 @@
 import { shell, icon } from '../components/layout';
 
-const updated = '3 November 2026';
+const updated = '4 November 2026';
 
 const pages = {
   privacy: {
@@ -11,7 +11,7 @@ const pages = {
       ['Solo calculator', 'Names, balances, optional PayNow mobile numbers, and saved groups in the solo calculator stay in your browser. Only save someone’s number with their permission. Settle does not verify that a number is registered with PayNow.'],
       ['Shared tables', 'When you create or join a shared table, your name, result, ready status, and optional PayNow number are sent to our server and stored in the connected Upstash Redis database. Table members see names, results, and ready status. Your PayNow number is shared with the table when the payment plan unlocks. Anyone holding the invite can join an open lobby. Only submit your own details.'],
       ['Payment QRs and sharing', 'Payment QRs are generated on your device without an external QR service. Each code contains the payee’s mobile number and SGD amount. Downloading or sharing it exposes those details to anyone who receives it. Payment details are not included in website URLs or analytics events.'],
-      ['Analytics', 'We use Vercel Web Analytics to understand aggregate visits and page views. It is designed without cookies and does not show us individual visitor identities. You can disable analytics from the Cookie Policy.'],
+      ['Analytics', 'We use Vercel Web Analytics to understand aggregate visits and page views. It is designed without cookies and does not show us individual visitor identities. We also store daily aggregate counts of tables created, players joined, rounds started, results submitted, and payment plans unlocked in our existing database for up to 90 days. These counters contain no names, phone numbers, table IDs, results, or balances. They count actions, not unique people or completed bank payments. You can disable both forms of analytics from the Cookie Policy; this stops future contributions from this browser.'],
       ['Hosting and service data', 'Vercel hosts this website and may process technical request data such as IP addresses, device information, and timestamps for security, delivery, and reliability. Their handling of that data is governed by Vercel’s own privacy terms.'],
       ['Retention and control', 'Shared tables expire 24 hours after creation; live session records expire from storage then. Browser credentials remain until you clear this site’s data. Solo drafts and groups remain on this device until removed. Hosting and database providers may retain operational logs or backups under their own policies. Analytics retention follows the site’s Vercel settings.'],
       ['Contact', 'For privacy questions, open an issue in the project’s GitHub repository. Please do not include private financial information in a public issue.'],
@@ -23,7 +23,7 @@ const pages = {
     intro: 'Settle does not use advertising cookies or cross-site tracking. It uses browser storage only to make the calculator work and remember your preference.',
     sections: [
       ['Local storage', 'We use local storage for solo drafts, names, optional PayNow numbers, groups, analytics preferences, and credentials that let you return to a shared table without an account. Shared-table information is also sent to server storage so your friends can see updates. Local storage is not a cookie.'],
-      ['Vercel Web Analytics', 'Our audience measurement is cookieless. It provides aggregate information such as page views and visitor counts without creating advertising profiles.'],
+      ['Analytics', 'Our audience measurement is cookieless. Vercel provides aggregate page views and visitor counts. Our database also stores daily counts of shared-table actions for up to 90 days, without names, phone numbers, table IDs, or balances. Disabling analytics stops future contributions from this browser to both systems.'],
       ['Your choices', 'You can disable analytics below. You can also remove calculator data at any time by clearing this site’s data in your browser settings.'],
     ],
     controls: true,
