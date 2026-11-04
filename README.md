@@ -29,6 +29,14 @@ Vercel Web Analytics is loaded through `@vercel/analytics`. Visitors can disable
 
 ## Shared tables
 
+### Optional home-screen app
+
+`/install` explains adding Settle from Safari (iOS/iPadOS), Chrome (Android), or a supported desktop browser. On browsers that provide `beforeinstallprompt`, a button invokes the native install prompt only after a user tap. Other browsers get manual instructions; dismissal does not block hosting or joining. The footer links to this page. An app-installed event or standalone display hides installation steps.
+
+Webpack emits `/manifest.webmanifest` plus opaque 180/192/512 PNG icons from the lime S brand. The manifest has a stable `/` app ID, root scope, standalone display, and `/sessions` start URL. Both public domains remain usable; install from `settlelah-sg.vercel.app` for the preferred address. The app and website use the same server and normal HTTPS invite links. There is no forced installation, new account system, service worker, offline cache, push notification permission, or store submission. Shared tables still need internet and expire after 24 hours. Browser/app storage can differ, so retain the same app/browser for existing seat and host access.
+
+Device installation UI and storage behavior need real iPhone/Android checks. Manifest/icon output, browser fallback, direct-route hosting, and the normal website flow can be checked in the local shared preview.
+
 `/sessions` creates a 24-hour table. The host shares **Copy invite link** or **Show join QR** in the lobby. The QR encodes only the same join invitation fragment, never the host credential; it is generated locally. Participants join with their own name and optional PayNow number. Once everyone joins, the host starts the round to lock the roster. The result editor appears after the start, with a single **Save & ready** button. The server atomically saves the amount, validates the PayNow number, and marks that participant ready. A failed validation saves neither the amount nor readiness. Positive results require a PayNow number. Winnings, losses, missing results and any exact difference are displayed explicitly. Settlement unlocks only when everyone is ready and the integer-cent total is zero. All-zero rounds need no payments.
 
 The host sees ready status and can reopen the lobby or start a fresh round after settlement. Editing a result clears that participant’s ready status. Results lock after settlement. The session screen polls every five seconds while visible, pauses when hidden, and stops when navigating away. Saved access lets each browser resume its own seat without an account. Clearing browser data loses that access; the invite does not restore host privileges.

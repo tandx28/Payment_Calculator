@@ -10,6 +10,7 @@
     { "source": "/cookies", "destination": "/index.html" },
     { "source": "/terms", "destination": "/index.html" },
     { "source": "/sessions", "destination": "/index.html" },
+    { "source": "/install", "destination": "/index.html" },
     { "source": "/session/:id", "destination": "/index.html" }
   ],
   "functions": { "api/sessions.js": { "includeFiles": "server/**" } },

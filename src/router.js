@@ -2,6 +2,7 @@ import { inputPage } from './pages/input';
 import { resultsPage } from './pages/results';
 import { legalPage } from './pages/legal';
 import { createSessionPage, sessionPage } from './pages/session';
+import { installPage } from './pwa';
 
 const routes = {
   '/': inputPage,
@@ -11,6 +12,7 @@ const routes = {
   '/cookies': () => legalPage('cookies'),
   '/terms': () => legalPage('terms'),
   '/sessions': createSessionPage,
+  '/install': installPage,
 };
 
 let cleanup;

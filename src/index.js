@@ -1,5 +1,6 @@
 import { inject } from '@vercel/analytics';
 import { initRouter } from './router';
+import { initPwa } from './pwa';
 import './styles.css';
 
 if (localStorage.getItem('settle-analytics') !== 'disabled') {
@@ -16,4 +17,5 @@ if (localStorage.getItem('settle-analytics') !== 'disabled') {
   });
 }
 
+initPwa();
 initRouter();
