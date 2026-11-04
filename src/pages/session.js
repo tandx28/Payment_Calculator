@@ -226,7 +226,24 @@ export function sessionPage(id) {
     busy = true;
     render(state);
     try {
-      const next = await request(id, access.token || access.inviteToken, { ...input, version: state.version }, controller.signal);
+      let version = state.version;
+      const originalRound = state.round;
+      const originalMe = state.members.find((person) => person.id === state.me);
+      let next;
+      for (let attempt = 0; attempt < 4; attempt += 1) {
+        try {
+          next = await request(id, access.token || access.inviteToken, { ...input, version }, controller.signal);
+          break;
+        } catch (error) {
+          if (input.action !== 'submit' || error.status !== 409 || attempt === 3) throw error;
+          const latest = await request(id, access.token, undefined, controller.signal);
+          const latestMe = latest.members?.find((person) => person.id === latest.me);
+          // Retry only an unrelated player's update. Never overwrite our own newer result,
+          // a changed round, or a host reopening/locking the table.
+          if (latest.phase !== 'collecting' || latest.round !== originalRound || !latestMe || latestMe.ready !== originalMe.ready || latestMe.cents !== originalMe.cents || latestMe.mobile !== originalMe.mobile) throw error;
+          version = latest.version;
+        }
+      }
       if (!active) return;
       busy = false;
       if (input.action === 'submit') { editorDirty = false; state = next; fillEditor(); }
