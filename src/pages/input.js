@@ -2,6 +2,8 @@ import { navigateTo } from '../router';
 import { icon, shell } from '../components/layout';
 import { normalizeMobile, amountInCents } from '../process/paynow.mjs';
 import { normalizeMember, readStorage } from '../process/storage.mjs';
+import { chipSettingsMarkup } from '../components/chip-settings';
+import { chipSettings, chipEntry, chipTally, settleChips } from '../process/chips.mjs';
 
 const defaultPlayers = [
   { name: '', value: '' },
@@ -38,11 +40,13 @@ export function inputPage() {
         <div>
           <p class="step-label">Step 1 of 1</p>
           <h2 id="calculator-title">Who’s up, who’s down?</h2>
-          <p>Tap + if they won, or − if they lost. The table should add up to $0.</p>
+          <p>Enter cash wins/losses, or use final chips to calculate everyone’s SGD result.</p>
         </div>
         <div class="balance-pill" id="balancePill">Balance <strong>$0.00</strong></div>
       </div>
 
+      ${chipSettingsMarkup('solo')}
+      <p id="soloChipStatus" class="shared-disclosure" role="status" hidden></p>
       <div class="group-panel">
         <div class="group-copy">
           <span class="group-icon">${icon('shield')}</span>
@@ -57,7 +61,7 @@ export function inputPage() {
       </div>
 
       <form id="playerForm" novalidate>
-        <div class="field-labels" aria-hidden="true"><span>Person</span><span>+/−</span><span>Balance (SGD)</span><span></span></div>
+        <div id="cashFieldLabels" class="field-labels" aria-hidden="true"><span>Person</span><span>+/−</span><span>Balance (SGD)</span><span></span></div>
         <div id="playerInputs" class="player-list"></div>
         <button class="add-button" id="addPlayer" type="button">${icon('plus')} Add another person</button>
         <div id="errorMessage" class="error-message" role="alert" hidden></div>
@@ -98,6 +102,15 @@ export function inputPage() {
   const groupDialog = document.getElementById('groupDialog');
   const groupName = document.getElementById('groupName');
   const deleteGroupButton = document.getElementById('deleteGroupButton');
+  const mode = document.getElementById('soloMode');
+  const stack = document.getElementById('soloStack');
+  const price = document.getElementById('soloPrice');
+  const rememberedSettings = readStorage('settle-chip-settings', {});
+  mode.value = ['cash', 'poker', 'mahjong'].includes(rememberedSettings.mode) ? rememberedSettings.mode : 'cash';
+  stack.value = rememberedSettings.chipsPerBuyIn ?? 300;
+  price.value = rememberedSettings.buyInAmount ?? 20;
+  const isChips = () => mode.value !== 'cash';
+  const settings = () => chipSettings({ mode: mode.value, chipsPerBuyIn: stack.value, buyInAmount: price.value });
 
   function readRows() {
     return [...playerInputs.querySelectorAll('.player-row')].map((row) => {
@@ -109,16 +122,45 @@ export function inputPage() {
         invalidAmount: Number(amount) < 0,
         sign: row.dataset.sign,
         value: amount === '' ? '' : String(multiplier * Number(amount)),
+        finalChips: row.querySelector('[name="finalChips"]').value,
+        buyIns: mode.value === 'mahjong' ? 1 : row.querySelector('[name="buyIns"]').value,
       };
     });
   }
 
   function updateBalance() {
-    const total = readRows().reduce((sum, player) => sum + (Number(player.value) || 0), 0);
+    const rows = readRows();
+    const total = rows.reduce((sum, player) => sum + (Number(player.value) || 0), 0);
     const pill = document.getElementById('balancePill');
-    pill.innerHTML = `Balance <strong>${formatCurrency(total)}</strong>`;
-    pill.classList.toggle('is-balanced', Math.abs(total) < 0.005);
-    localStorage.setItem(DRAFT_KEY, JSON.stringify(readRows()));
+    const status = document.getElementById('soloChipStatus');
+    document.getElementById('soloChipSettings').hidden = !isChips();
+    stack.disabled = !isChips();
+    price.disabled = !isChips();
+    document.getElementById('cashFieldLabels').hidden = isChips();
+    playerInputs.classList.toggle('chip-mode', isChips());
+    status.hidden = !isChips();
+    if (isChips()) {
+      try {
+        const config = settings();
+        const tally = chipTally(config, rows);
+        const balanced = !tally.missing && tally.difference === 0;
+        pill.innerHTML = `Chips <strong>${tally.counted.toLocaleString('en-SG')} / ${tally.issued.toLocaleString('en-SG')}</strong>`;
+        pill.classList.toggle('is-balanced', balanced);
+        status.textContent = `${tally.issued.toLocaleString('en-SG')} issued · ${tally.counted.toLocaleString('en-SG')} counted. ${tally.missing ? `Add final chips for ${tally.missing} more person${tally.missing === 1 ? '' : 's'}.` : tally.difference ? `${Math.abs(tally.difference).toLocaleString('en-SG')} ${tally.difference < 0 ? 'missing' : 'extra'} — check chip counts${mode.value === 'poker' ? ' and buy-ins' : ''}.` : 'All chips tally. Ready to settle.'}`;
+        const final = balanced ? settleChips(config, rows) : null;
+        [...playerInputs.children].forEach((row, index) => {
+          try {
+            const entry = chipEntry(config, rows[index]);
+            row.querySelector('.chip-preview').textContent = `${entry.buyIns * config.chipsPerBuyIn} chips bought · net ${final ? '' : '≈ '}${formatCurrency((final ? final.cents[index] : entry.cents) / 100)}${final?.fractionalCents ? ' (whole-cent allocation)' : ''}`;
+          } catch { row.querySelector('.chip-preview').textContent = 'Enter final chips, including 0 if you busted.'; }
+        });
+      } catch (error) { pill.textContent = 'Check chip inputs'; pill.classList.remove('is-balanced'); status.textContent = error.message; }
+    } else {
+      pill.innerHTML = `Balance <strong>${formatCurrency(total)}</strong>`;
+      pill.classList.toggle('is-balanced', Math.abs(total) < 0.005);
+    }
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(rows));
+    localStorage.setItem('settle-chip-settings', JSON.stringify({ mode: mode.value, chipsPerBuyIn: stack.value, buyInAmount: price.value }));
   }
 
   function renderRows(data) {
@@ -134,9 +176,14 @@ export function inputPage() {
         <div class="person-fields">
           <label><span class="mobile-label">Person</span><input name="name" type="text" maxlength="40" autocomplete="off" placeholder="Name" value="${escapeHtml(player.name)}" aria-label="Person ${index + 1} name"></label>
           <label class="phone-field"><span>PayNow mobile (optional)</span><input name="mobile" type="tel" inputmode="tel" maxlength="24" autocomplete="off" placeholder="8-digit mobile" value="${escapeHtml(player.mobile || '')}" aria-label="Person ${index + 1} PayNow mobile"></label>
+          <div class="chip-player-fields" ${isChips() ? '' : 'hidden'}>
+            <label><span>Final chips</span><input name="finalChips" type="number" min="0" max="1000000000" step="1" inputmode="numeric" placeholder="0 if busted" value="${escapeHtml(player.finalChips ?? '')}" aria-label="Person ${index + 1} final chips"></label>
+            <label ${mode.value === 'poker' ? '' : 'hidden'}><span>Buy-ins (incl. first)</span><input name="buyIns" type="number" min="1" max="1000" step="1" inputmode="numeric" value="${escapeHtml(player.buyIns ?? 1)}" aria-label="Person ${index + 1} buy-ins including first"></label>
+            <p class="chip-preview shared-disclosure"></p>
+          </div>
         </div>
-        <button class="sign-toggle ${sign === '-' ? 'is-negative' : ''}" type="button" aria-label="Person ${index + 1} balance sign: ${sign === '-' ? 'negative' : 'positive'}" aria-pressed="${sign === '-'}">${sign === '-' ? '−' : '+'}</button>
-        <label class="money-input"><span class="mobile-label">Balance (SGD)</span><span class="currency">$</span><input name="value" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0.00" value="${escapeHtml(amount)}" aria-label="Person ${index + 1} balance amount"></label>
+        <button class="sign-toggle ${sign === '-' ? 'is-negative' : ''}" ${isChips() ? 'hidden' : ''} type="button" aria-label="Person ${index + 1} balance sign: ${sign === '-' ? 'negative' : 'positive'}" aria-pressed="${sign === '-'}">${sign === '-' ? '−' : '+'}</button>
+        <label class="money-input" ${isChips() ? 'hidden' : ''}><span class="mobile-label">Balance (SGD)</span><span class="currency">$</span><input name="value" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0.00" value="${escapeHtml(amount)}" aria-label="Person ${index + 1} balance amount"></label>
         <button class="icon-button" type="button" aria-label="Remove person ${index + 1}" ${data.length <= 2 ? 'disabled' : ''}>${icon('trash')}</button>`;
 
       row.querySelector('.sign-toggle').addEventListener('click', (event) => {
@@ -157,6 +204,9 @@ export function inputPage() {
     playerInputs.querySelectorAll('input').forEach((input) => input.addEventListener('input', updateBalance));
     updateBalance();
   }
+
+  mode.addEventListener('change', () => { errorMessage.hidden = true; renderRows(readRows()); });
+  [stack, price].forEach((input) => input.addEventListener('input', updateBalance));
 
   function renderGroups(selectedId = localStorage.getItem(ACTIVE_GROUP_KEY) || '') {
     groupSelect.innerHTML = `<option value="">Choose a saved group</option>${groups.map((group) => `<option value="${escapeHtml(group.id)}" ${group.id === selectedId ? 'selected' : ''}>${escapeHtml(group.name)}</option>`).join('')}`;
@@ -235,6 +285,16 @@ export function inputPage() {
   document.getElementById('playerForm').addEventListener('submit', (event) => {
     event.preventDefault();
     const rows = readRows();
+    if (isChips()) {
+      try {
+        const result = settleChips(settings(), rows);
+        const playersData = rows.map((person, index) => ({ player: person.name.trim() || `Person ${index + 1}`, mobile: person.mobile.trim() ? normalizeMobile(person.mobile) : '', value: result.cents[index] / 100 }));
+        errorMessage.hidden = true;
+        localStorage.setItem('playersData', JSON.stringify(playersData));
+        navigateTo('/results');
+      } catch (error) { showError(error.message); }
+      return;
+    }
     if (rows.some((player) => player.invalidAmount)) {
       showError('Enter the amount without a sign, then use the + / − button to choose won or lost.');
       return;
