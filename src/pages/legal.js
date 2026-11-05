@@ -1,6 +1,6 @@
 import { shell, icon } from '../components/layout';
 
-const updated = '4 November 2026';
+const updated = '6 November 2026';
 
 const pages = {
   privacy: {
@@ -8,8 +8,8 @@ const pages = {
     title: 'Your numbers are yours.',
     intro: 'Settle works without accounts. The solo calculator stays on your device; shared tables sync the information needed for your friends to settle together.',
     sections: [
-      ['Solo calculator', 'Names, balances, optional PayNow mobile numbers, and saved groups in the solo calculator stay in your browser. Only save someone’s number with their permission. Settle does not verify that a number is registered with PayNow.'],
-      ['Shared tables', 'When you create or join a shared table, your name, result, ready status, and optional PayNow number are sent to our server and stored in the connected Upstash Redis database. Table members see names, results, and ready status. Your PayNow number is shared with the table when the payment plan unlocks. Anyone holding the invite can join an open lobby. Only submit your own details.'],
+      ['Solo calculator', 'Names, balances, chip settings, final chip counts, buy-in counts, optional PayNow mobile numbers, and saved groups in the solo calculator stay in your browser. Only save someone’s number with their permission. Settle does not verify that a number is registered with PayNow.'],
+      ['Shared tables', 'When you create or join a shared table, your name, result, ready status, optional final chip and buy-in counts, table chip settings, and optional PayNow number are sent to our server and stored in the connected Upstash Redis database. Table members see names, results, chip and buy-in counts, and ready status. Your PayNow number is shared with the table when the payment plan unlocks. Anyone holding the invite can join an open lobby. Only submit your own details.'],
       ['Payment QRs and sharing', 'Payment QRs are generated on your device without an external QR service. Each code contains the payee’s mobile number and SGD amount. Downloading or sharing it exposes those details to anyone who receives it. Payment details are not included in website URLs or analytics events.'],
       ['Analytics', 'We use Vercel Web Analytics to understand aggregate visits and page views. It is designed without cookies and does not show us individual visitor identities. We also store daily aggregate counts of tables created, players joined, rounds started, results submitted, and payment plans unlocked in our existing database for up to 90 days. These counters contain no names, phone numbers, table IDs, results, or balances. They count actions, not unique people or completed bank payments. You can disable both forms of analytics from the Cookie Policy; this stops future contributions from this browser.'],
       ['Hosting and service data', 'Vercel hosts this website and may process technical request data such as IP addresses, device information, and timestamps for security, delivery, and reliability. Their handling of that data is governed by Vercel’s own privacy terms.'],
