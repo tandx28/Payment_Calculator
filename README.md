@@ -29,6 +29,14 @@ Vercel Web Analytics is loaded through `@vercel/analytics`. Visitors can disable
 
 ## Shared tables
 
+### Chips and buy-ins
+
+Both the solo calculator and shared-table creation offer cash results, poker chips, or mahjong chips. Default chip settings are 300 chips for SGD 20, configurable before a shared table is created. Each poker buy-in supplies the same stack at the same price; the player enters a total buy-in count including the first. Partial/unequal top-ups are not supported. Mahjong enforces exactly one equal starting stack per player. Enter final chips, including zero for a busted stack. Chip counts and buy-in counts must be whole non-negative/positive numbers respectively.
+
+Net SGD = `(final chips − chips per stack × buy-ins) × buy-in SGD / chips per stack`. All final chips must equal all issued chips before settlement. Shared calculations run on the server; supplied client cash results cannot override chip conversion. Save & ready remains one atomic action. A chip mismatch prevents payment unlock even if rounded SGD previews happen to total zero. Editing and submitting again corrects the result; a new round resets chip counts and buy-ins while retaining table settings. Existing cash sessions continue to work.
+
+`src/process/chips.mjs` uses integer/BigInt rational arithmetic and largest remainders to allocate fractional cents after the chips balance. Each final result differs from its exact value by less than one cent; ties follow roster order. Net cents always sum exactly to zero. UI previews are marked approximate until settlement, and rounding is disclosed. Solo settings/drafts stay local; shared settings/chip counts follow the existing 24-hour retention. Analytics counters receive no chip or buy-in data. `npm test` covers rebuys, equal mahjong stacks, missing/extra chips, zero stacks, fractional cents and server-enforced gating.
+
 ### Optional home-screen app
 
 `/install` explains adding Settle from Safari (iOS/iPadOS), Chrome (Android), or a supported desktop browser. On browsers that provide `beforeinstallprompt`, a button invokes the native install prompt only after a user tap. Other browsers get manual instructions; dismissal does not block hosting or joining. The footer links to this page. An app-installed event or standalone display hides installation steps.

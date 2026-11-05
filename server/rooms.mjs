@@ -1,5 +1,6 @@
 import { createHash, randomBytes } from 'node:crypto';
 import { amountInCents, normalizeMobile } from '../src/process/paynow.mjs';
+import { chipSettings, chipEntry, chipTally, settleChips } from '../src/process/chips.mjs';
 
 export const ROOM_LIFETIME = 24 * 60 * 60 * 1000;
 export class RoomError extends Error {
@@ -18,13 +19,15 @@ const mobile = (value) => {
 };
 
 export function createRoom(input, now = Date.now()) {
+  let settings;
+  try { settings = chipSettings(input); } catch (error) { throw new RoomError(error.message); }
   const hostToken = secret();
   const inviteToken = secret();
   const hostId = randomBytes(12).toString('hex');
   return {
     hostToken, inviteToken,
     room: {
-      id: randomBytes(16).toString('hex'), title: name(input.title || 'Tonight’s table'),
+      id: randomBytes(16).toString('hex'), title: name(input.title || 'Tonight’s table'), settings,
       version: 1, round: 1, phase: 'lobby', createdAt: now, expiresAt: now + ROOM_LIFETIME,
       hostId, hostHash: digest(hostToken), inviteHash: digest(inviteToken),
       members: [{ id: hostId, name: name(input.name), mobile: mobile(input.mobile), tokenHash: digest(hostToken), cents: null, ready: false }],
@@ -72,17 +75,23 @@ export function changeRoom(original, actor, input) {
         break;
       case 'submit':
       case 'update': {
+        const chips = room.settings?.mode && room.settings.mode !== 'cash';
+        if (chips && input.action !== 'submit') throw new RoomError('Use Save & ready to submit final chips.', 400);
         if (room.phase === 'settled') throw new RoomError('This round is locked. Ask the host to start a new round.', 409);
         if (input.action === 'submit' && room.phase !== 'collecting') throw new RoomError('Wait for the host to start the round.', 409);
         const person = room.members.find((member) => member.id === actor.id);
         if (input.action === 'submit' && person.ready) throw new RoomError('Edit your result before submitting again.', 409);
-        try { person.cents = amountInCents(input.value); } catch (error) { throw new RoomError(error.message); }
+        try {
+          if (chips) Object.assign(person, chipEntry(room.settings, input));
+          else person.cents = amountInCents(input.value);
+        } catch (error) { throw new RoomError(error.message); }
         person.mobile = mobile(input.mobile);
-        if (input.action === 'submit' && person.cents > 0 && !person.mobile) throw new RoomError('You’re up! Add your PayNow mobile so your friends can scan to pay.');
+        if (input.action === 'submit' && (chips ? person.delta > 0 : person.cents > 0) && !person.mobile) throw new RoomError('You’re up! Add your PayNow mobile so your friends can scan to pay.');
         person.ready = input.action === 'submit';
         break;
       }
       case 'ready': {
+        if (room.settings?.mode && room.settings.mode !== 'cash') throw new RoomError('Use Save & ready to submit final chips.');
         if (room.phase !== 'collecting') throw new RoomError('Wait for the host to start the round.', 409);
         const person = room.members.find((member) => member.id === actor.id);
         if (person.cents === null) throw new RoomError('Save your result before marking ready.');
@@ -106,7 +115,8 @@ export function changeRoom(original, actor, input) {
         if (input.action === 'new-round') {
           if (room.phase !== 'settled') throw new RoomError('Finish this round first.');
           room.round += 1;
-          room.members.forEach((person) => { person.cents = null; });
+          room.members.forEach((person) => { person.cents = null; delete person.finalChips; delete person.buyIns; delete person.delta; });
+          delete room.chipRounding;
         } else if (room.phase === 'settled') throw new RoomError('Start a new round to change a settled table.');
         room.phase = 'lobby';
         room.members.forEach((person) => { person.ready = false; });
@@ -116,16 +126,27 @@ export function changeRoom(original, actor, input) {
   }
   const everyoneReady = room.members.length >= 2 && room.members.every((person) => person.ready && person.cents !== null);
   const total = room.members.reduce((sum, person) => sum + (person.cents || 0), 0);
-  if (room.phase === 'collecting' && everyoneReady && total === 0) room.phase = 'settled';
+  if (room.phase === 'collecting' && everyoneReady) {
+    if (room.settings?.mode && room.settings.mode !== 'cash') {
+      if (chipTally(room.settings, room.members).difference === 0) {
+        let result;
+        try { result = settleChips(room.settings, room.members); } catch (error) { throw new RoomError(error.message); }
+        room.members.forEach((person, index) => { person.cents = result.cents[index]; });
+        room.chipRounding = result.fractionalCents;
+        room.phase = 'settled';
+      }
+    } else if (total === 0) room.phase = 'settled';
+  }
   room.version += 1;
   return room;
 }
 
 export function publicRoom(room, actor) {
-  const base = { id: room.id, title: room.title, round: room.round, phase: room.phase, version: room.version, expiresAt: room.expiresAt, memberCount: room.members.length };
+  const base = { id: room.id, title: room.title, round: room.round, phase: room.phase, version: room.version, expiresAt: room.expiresAt, memberCount: room.members.length, settings: room.settings || { mode: 'cash' }, chipRounding: Boolean(room.chipRounding) };
   if (actor.invite) return { ...base, needsJoin: true };
   const members = room.members.map((person) => ({
     id: person.id, name: person.name, cents: person.cents, ready: person.ready, host: person.id === room.hostId,
+    ...(room.settings?.mode && room.settings.mode !== 'cash' ? { finalChips: person.finalChips ?? null, buyIns: person.buyIns ?? 1 } : {}),
     mobile: room.phase === 'settled' || actor.id === person.id ? person.mobile : '',
   }));
   return { ...base, members, me: actor.id, isHost: Boolean(actor.host) };

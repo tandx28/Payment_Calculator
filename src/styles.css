@@ -215,6 +215,18 @@ footer p { margin: 0; }
 .shared-create, .room-card { margin-bottom: 100px; }
 .shared-create label { display: grid; gap: 8px; font-size: 12px; color: var(--muted); margin-bottom: 18px; }
 .shared-create input { width: 100%; min-width: 0; height: 48px; padding: 0 13px; background: rgba(5,18,14,.66); border: 1px solid var(--line); border-radius: 10px; color: var(--ink); outline-color: var(--lime); }
+.shared-create select { width: 100%; min-width: 0; height: 48px; padding: 0 13px; border: 1px solid var(--line); border-radius: 10px; background: #10251f; color: var(--ink); }
+.chip-settings.shared-create { margin-bottom: 24px; }
+.chip-config, .chip-player-fields { display: grid; gap: 12px; }
+.chip-config { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.chip-config > p { grid-column: 1 / -1; margin-top: 0; }
+.chip-player-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 12px; }
+.chip-player-fields label > span { display: block; margin-bottom: 7px; color: var(--muted); font-size: 11px; }
+.chip-preview { grid-column: 1 / -1; margin: 0 0 12px; }
+.chip-mode .player-row { grid-template-columns: minmax(0, 1fr) 42px; border-bottom: 1px solid var(--line); margin-bottom: 18px; }
+.chip-mode .player-row .person-fields { grid-column: 1; grid-row: 1; }
+.chip-mode .player-row .icon-button { grid-column: 2; grid-row: 1; }
+@media (max-width: 460px) { .chip-config, .chip-player-fields { grid-template-columns: 1fr; } }
 .shared-disclosure { color: var(--muted); font-size: 12px; line-height: 1.7; }
 .shared-back { margin: 24px 0 0; }
 .shared-create button:disabled, .room-card button:disabled { opacity: .5; cursor: not-allowed; }
